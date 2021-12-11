@@ -1,6 +1,7 @@
-//
-// Created by aadams on 12/6/21.
-//
+/*
+ * Author: Alex Adams
+ */
+
 
 #include "huffman.h"
 

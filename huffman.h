@@ -1,3 +1,7 @@
+/*
+ * Author: Alex Adams
+ */
+
 #ifndef HUFFMAN_H
 #define HUFFMAN_H
 

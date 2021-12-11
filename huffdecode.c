@@ -1,3 +1,8 @@
+/*
+ * Author: Alex Adams
+ */
+
+
 #include <stdio.h>
 #include "huffman.h"
 
