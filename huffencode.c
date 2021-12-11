@@ -122,7 +122,7 @@ void codify(struct TreeNode *pNode);
 void
 tableTime(struct TreeNode *pNode, unsigned long table[256][3]);
 
-void printTable(unsigned long pInt[256][3]);
+void printTable(unsigned long pInt[256][3], unsigned long count);
 
 void
 output(unsigned long pInt[256][3], FILE *in, FILE *out, unsigned long count);
@@ -155,11 +155,11 @@ void encodeFile(FILE* in, FILE* out)
 
   tableTime(treeNode, table);
 
-  printTable(table);
+  printTable(table, counter);
 
   freeTree(treeNode);
 
-  output(table, in, out, 0);
+  output(table, in, out, counter);
 }
 
 void output(unsigned long pInt[256][3], FILE *in, FILE *out, unsigned long
@@ -170,51 +170,68 @@ count)
   unsigned char howMany;
   unsigned char builder;
   unsigned char tmp;
-  int tracker;
+  unsigned long tmpChanger;
+  unsigned long tracker;
 
   tracker = 8;
   howMany = 0;
   builder = 0;
   tmp = 0;
+  tmpChanger = 0;
 
   for(i=0; i<256; i++)
   {
     if(pInt[i][0]!=0) howMany++;
   }
   /* How many codes exist? Overflow is aight b/c 256=0 anywho */
-  fprintf(out,"%c",howMany);
+  fputc(howMany, out);
   /* Symbols and codes */
   for(i=0; i<256; i++)
   {
     if(pInt[i][0]!=0)
     {
-      fprintf(out, "%c%c%c", i, (unsigned char)pInt[i][2], (unsigned char)
-        (pInt[i][1]<<(32-pInt[i][2])));
+      fputc(i, out);
+      fputc((unsigned char) pInt[i][2], out);
+      fputc((unsigned char) (pInt[i][1]<<(8-pInt[i][2])), out);
     }
   }
   /* Print total number of characters encoded */
-  fprintf(out, "%lu", count);
+  fwrite(&count, sizeof(unsigned long), 1, out);
 
+  rewind(in);
   while((current = fgetc(in)) != EOF)
   {
-    while(tracker > pInt[current][2])
+    if(tracker > pInt[current][2])
     {
-      builder|=pInt[current][1]<<((8-(8-tracker))-pInt[current][2]);
+      builder|=pInt[current][1]<<(tracker-pInt[current][2]);
       tracker-=(int)pInt[current][2];
+      continue;
     }
-    if(tracker!=0)
+    else if(pInt[current][2]>8)
+    {
+      builder |= ((pInt[current][1] >> (pInt[current][2]-8)) & 0xFF) >>
+        (8-tracker);
+      tmp |= ((pInt[current][1] >> (pInt[current][2]-8)) & 0xFF)<<tracker;
+      pInt[current][2]-=8;
+      for(i=0; i<pInt[current][2];i++)
+      {
+        tmpChanger |= (pInt[current][1]) & 1<<i;
+      }
+      pInt[current][1] = tmpChanger;
+    }
+    else if(tracker!=0)
     {
       builder|=pInt[current][1]>>(pInt[current][2]-tracker);
       tmp|=pInt[current][1]<<(8-(pInt[current][2]-tracker));
+      tracker =(8-(pInt[current][2]-tracker));
     }
     fprintf(out, "%c", builder);
     builder = tmp;
     tmp = 0;
-    tracker = (int) (8-(pInt[current][2]-tracker));
   }
 }
 
-void printTable(unsigned long pInt[256][3])
+void printTable(unsigned long pInt[256][3], unsigned long count)
 {
   int i;
   unsigned long j;
@@ -225,9 +242,9 @@ void printTable(unsigned long pInt[256][3])
   {
     if(pInt[i][0]!=0)
     {
-      if(i < 33 || i > 126) printf("\n=%d\t\t", i);
-      else printf("\n%c\t\t", i);
-      printf("%lu\t\t", pInt[i][0]);
+      if(i < 33 || i > 126) printf("\n=%d\t", i);
+      else printf("\n%c\t", i);
+      printf("%lu\t", pInt[i][0]);
       for (j = pInt[i][2]; j > 0 ; j--)
       {
         if (pInt[i][1] & (1<<(j-1)))
@@ -238,6 +255,8 @@ void printTable(unsigned long pInt[256][3])
       }
     }
   }
+  printf("\n");
+  printf("Total chars = %lu\n", count);
 }
 
 /* Put values in lookup table */

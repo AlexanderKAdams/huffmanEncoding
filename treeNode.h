@@ -10,14 +10,14 @@ struct TreeNode
 {
   unsigned char symbol;
   unsigned long freq;
-  unsigned char code;
-  unsigned int codelen;
+  unsigned long code;
+  unsigned long codelen;
   struct TreeNode* left;
   struct TreeNode* right;
 };
 
 /* Alloc a new node with given symbol. */
-struct TreeNode * createTreeNode(unsigned char data, unsigned long freq, unsigned char symbol);
+struct TreeNode * createTreeNode(unsigned char symbol, unsigned long freq, unsigned char code);
 
 /* Return maximum depth of tree. Empty tree has depth 0. */
 int maxDepth(struct TreeNode* root);

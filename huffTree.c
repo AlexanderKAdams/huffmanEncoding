@@ -6,12 +6,12 @@
 #include <stdlib.h>
 #include "treeNode.h"
 
-struct TreeNode * createTreeNode(unsigned char data, unsigned long freq, unsigned char symbol)
+struct TreeNode * createTreeNode(unsigned char symbol, unsigned long freq, unsigned char code)
 {
   struct TreeNode *node = malloc(sizeof(struct TreeNode));
-  node->symbol=data;
+  node->symbol=symbol;
   node->freq=freq;
-  node->code=symbol;
+  node->code=code;
   node->codelen=0;
   node->left=node->right=NULL;
   return node;
