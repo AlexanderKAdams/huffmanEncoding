@@ -115,12 +115,12 @@ struct ListNode * has(struct ListNode* head, int data)
     return NULL;
   }
 
-  while (head != NULL && (head -> data)->data != data)
+  while (head != NULL && (head -> data)->symbol != data)
   {
     head = head -> next;
   }
 
-  if(head!=NULL && (head->data)->data==data)
+  if(head!=NULL && (head->data)->symbol == data)
   {
     return (head);
   }

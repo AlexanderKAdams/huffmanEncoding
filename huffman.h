@@ -16,14 +16,14 @@
 /*     Also writes freq/code table to standard output         */
 /* in -- File to encode.                                      */
 /*       May be binary, so don't assume printable characters. */
-/* out -- File where encoded data will be written.            */
+/* out -- File where encoded symbol will be written.            */
 /**************************************************************/
 void encodeFile(FILE* in, FILE* out);
 
 /***************************************************/
 /* Decode a Huffman encoded file.                  */
 /* in -- File to decode.                           */
-/* out -- File where decoded data will be written. */
+/* out -- File where decoded symbol will be written. */
 /***************************************************/
 void decodeFile(FILE* in, FILE* out);
 

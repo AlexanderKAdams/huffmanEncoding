@@ -12,14 +12,14 @@ struct ListNode
   struct ListNode* previous;
 };
 
-/* Alloc a new node with given data. */
+/* Alloc a new node with given symbol. */
 struct ListNode *createNode(struct TreeNode *data);
 
 /* Insert treeNode at appropriate place in a sorted list, return new list head. */
 struct ListNode* insertSorted(struct ListNode* head, struct TreeNode *treeNode);
 
 /* Treat list as a stack. (LIFO - last in, first out)
- * Remove and return data from head of non-empty list, changing head.
+ * Remove and return symbol from head of non-empty list, changing head.
  * Memory for removed node should be freed. */
 struct TreeNode * popStack(struct ListNode** headRef);
 

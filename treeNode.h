@@ -8,23 +8,19 @@
 
 struct TreeNode
 {
-  unsigned char data;
-  unsigned long freq;
   unsigned char symbol;
-  unsigned symlen;
+  unsigned long freq;
+  unsigned char code;
+  unsigned int codelen;
   struct TreeNode* left;
   struct TreeNode* right;
 };
 
-/* Alloc a new node with given data. */
+/* Alloc a new node with given symbol. */
 struct TreeNode * createTreeNode(unsigned char data, unsigned long freq, unsigned char symbol);
 
 /* Return maximum depth of tree. Empty tree has depth 0. */
 int maxDepth(struct TreeNode* root);
-
-/* Print data for leaves on single line,
- * separated with spaces, ending with newline.*/
-void printLeaves(struct TreeNode* root);
 
 /* Free memory used by the tree. */
 void freeTree(struct TreeNode* root);
@@ -32,8 +28,6 @@ void freeTree(struct TreeNode* root);
 int max(int num1, int num2);
 
 void printIt(struct TreeNode *root);
-
-void doItForTheNewline(struct TreeNode *root);
 
 void verboseNewline(struct TreeNode *pNode, int line);
 

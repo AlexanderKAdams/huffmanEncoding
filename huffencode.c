@@ -6,7 +6,6 @@
 #include "huffman.h"
 #include "treeNode.h"
 #include "treeListNode.h"
-#include "dynArray.h"
 
 struct ListNode *charCount(struct ListNode *head, int current);
 
@@ -117,18 +116,26 @@ struct ListNode *charCount(struct ListNode *head, int current)
 
 struct TreeNode * priqToNode(struct ListNode **pNode);
 
-void symbolic(struct TreeNode *pNode);
+void codify(struct TreeNode *pNode);
+
 
 void
-tableTime(struct TreeNode *pNode, Array table);
+tableTime(struct TreeNode *pNode, unsigned long table[256][3]);
+
+void printTable(unsigned long pInt[256][3]);
+
+void
+output(unsigned long pInt[256][3], FILE *in, FILE *out, unsigned long count);
 
 void encodeFile(FILE* in, FILE* out)
 {
   int current;
   struct ListNode* priq;
   struct TreeNode* treeNode;
-  Array a;
+  unsigned long counter;
+  unsigned long table[256][3] = {0};
 
+  counter = 1;
   current = fgetc(in);
   treeNode = createTreeNode((char)current, 1, 0);
   priq = insertSorted(NULL, treeNode);
@@ -136,52 +143,131 @@ void encodeFile(FILE* in, FILE* out)
   /* put all characters into priority queue */
   while((current = fgetc(in)) != EOF)
   {
+    if(current==256) current = 0;
     priq = charCount(priq, current);
+    counter++;
   }
 
   /* Make huffTree from priority queue */
   treeNode = priqToNode(&priq);
 
-  symbolic(treeNode);
+  codify(treeNode);
 
-  initArray(&a, countLeaves(treeNode));
+  tableTime(treeNode, table);
 
-  tableTime(treeNode, a);
-
-  printLeaves(treeNode);
+  printTable(table);
 
   freeTree(treeNode);
-  freeArray(&a);
+
+  output(table, in, out, 0);
 }
 
-/* I need to put these in a table. The way I do it is horrible, but I have a
- * deadline. */
-void tableTime(struct TreeNode *pNode, Array table)
+void output(unsigned long pInt[256][3], FILE *in, FILE *out, unsigned long
+count)
+{
+  int current;
+  int i;
+  unsigned char howMany;
+  unsigned char builder;
+  unsigned char tmp;
+  int tracker;
+
+  tracker = 8;
+  howMany = 0;
+  builder = 0;
+  tmp = 0;
+
+  for(i=0; i<256; i++)
+  {
+    if(pInt[i][0]!=0) howMany++;
+  }
+  /* How many codes exist? Overflow is aight b/c 256=0 anywho */
+  fprintf(out,"%c",howMany);
+  /* Symbols and codes */
+  for(i=0; i<256; i++)
+  {
+    if(pInt[i][0]!=0)
+    {
+      fprintf(out, "%c%c%c", i, (unsigned char)pInt[i][2], (unsigned char)
+        (pInt[i][1]<<(32-pInt[i][2])));
+    }
+  }
+  /* Print total number of characters encoded */
+  fprintf(out, "%lu", count);
+
+  while((current = fgetc(in)) != EOF)
+  {
+    while(tracker > pInt[current][2])
+    {
+      builder|=pInt[current][1]<<((8-(8-tracker))-pInt[current][2]);
+      tracker-=(int)pInt[current][2];
+    }
+    if(tracker!=0)
+    {
+      builder|=pInt[current][1]>>(pInt[current][2]-tracker);
+      tmp|=pInt[current][1]<<(8-(pInt[current][2]-tracker));
+    }
+    fprintf(out, "%c", builder);
+    builder = tmp;
+    tmp = 0;
+    tracker = (int) (8-(pInt[current][2]-tracker));
+  }
+}
+
+void printTable(unsigned long pInt[256][3])
+{
+  int i;
+  unsigned long j;
+
+  printf("Symbol\tFreq\tCode");
+
+  for(i=0; i<256; i++)
+  {
+    if(pInt[i][0]!=0)
+    {
+      if(i < 33 || i > 126) printf("\n=%d\t\t", i);
+      else printf("\n%c\t\t", i);
+      printf("%lu\t\t", pInt[i][0]);
+      for (j = pInt[i][2]; j > 0 ; j--)
+      {
+        if (pInt[i][1] & (1<<(j-1)))
+        {
+          printf("1");
+        }
+        else printf("0");
+      }
+    }
+  }
+}
+
+/* Put values in lookup table */
+void tableTime(struct TreeNode *pNode, unsigned long table[256][3])
 {
   {
     if (pNode->right == NULL && pNode->left == NULL)
     {
-      insertArray(&table, pNode->data, pNode->freq, pNode->symbol,
-                  pNode->symlen);
+      table[pNode->symbol][0] = pNode->freq;
+      table[pNode->symbol][1] = pNode->code;
+      table[pNode->symbol][2] = pNode->codelen;
     } else if (pNode->left != NULL) tableTime(pNode->left, table);
     if (pNode->right != NULL) tableTime(pNode->right, table);
   }
 }
 
-void symbolic(struct TreeNode *pNode)
+void codify(struct TreeNode *pNode)
 {
   if(pNode->right!=NULL)
   {
-    pNode->right->symbol=pNode->symbol<<1;
-    pNode->right->symbol|=1;
-    pNode->right->symlen++;
-    symbolic(pNode->right);
+    pNode->right->code=pNode->code << 1;
+    pNode->right->code|=1;
+    pNode->right->codelen=pNode->codelen+1;
+    codify(pNode->right);
   }
   if(pNode->left!=NULL)
   {
-    pNode->left->symbol=pNode->symbol<<1;
-    pNode->left->symlen++;
-    symbolic(pNode->left);
+    pNode->left->code=pNode->code << 1;
+    pNode->left->codelen=pNode->codelen+1;
+    codify(pNode->left);
   }
 }
 
